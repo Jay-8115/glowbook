@@ -3,13 +3,29 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GlowBook - Multi-vendor Hair Salon Booking Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: salons
+    description: Salon management
+  - name: services
+    description: Service management
+  - name: bookings
+    description: Booking management
+  - name: reviews
+    description: Reviews and ratings
+  - name: users
+    description: User profile management
+  - name: staff
+    description: Staff management
+  - name: categories
+    description: Service categories
 paths:
   /healthz:
     get:
@@ -24,7 +40,693 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── AUTH ─────────────────────────────────────────────────────────────────
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  # ─── USERS ────────────────────────────────────────────────────────────────
+  /users/profile:
+    patch:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/favorites:
+    get:
+      operationId: getFavorites
+      tags: [users]
+      summary: Get user's favorite salons
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Favorite salons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Salon"
+
+  /users/favorites/{salonId}:
+    post:
+      operationId: addFavorite
+      tags: [users]
+      summary: Add salon to favorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Added to favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+    delete:
+      operationId: removeFavorite
+      tags: [users]
+      summary: Remove salon from favorites
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Removed from favorites
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ─── CATEGORIES ───────────────────────────────────────────────────────────
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: List all service categories
+      responses:
+        "200":
+          description: Categories list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  # ─── SALONS ───────────────────────────────────────────────────────────────
+  /salons:
+    get:
+      operationId: getSalons
+      tags: [salons]
+      summary: List salons with optional filters
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+        - name: radius
+          in: query
+          schema:
+            type: number
+            description: Radius in km
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [rating, distance, price]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Salons list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalonListResponse"
+
+    post:
+      operationId: createSalon
+      tags: [salons]
+      summary: Create a new salon (owner)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalonInput"
+      responses:
+        "201":
+          description: Salon created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Salon"
+
+  /salons/featured:
+    get:
+      operationId: getFeaturedSalons
+      tags: [salons]
+      summary: Get trending and top-rated salons
+      responses:
+        "200":
+          description: Featured salons
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FeaturedSalonsResponse"
+
+  /salons/my:
+    get:
+      operationId: getMySalons
+      tags: [salons]
+      summary: Get salons owned by current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Owner's salons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Salon"
+
+  /salons/{id}:
+    get:
+      operationId: getSalon
+      tags: [salons]
+      summary: Get a salon by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Salon details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalonDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateSalon
+      tags: [salons]
+      summary: Update a salon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SalonUpdate"
+      responses:
+        "200":
+          description: Salon updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Salon"
+
+  /salons/{id}/stats:
+    get:
+      operationId: getSalonStats
+      tags: [salons]
+      summary: Get salon dashboard stats (owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Salon statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalonStats"
+
+  /salons/{id}/availability:
+    get:
+      operationId: getSalonAvailability
+      tags: [salons]
+      summary: Get available time slots for a salon on a date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: serviceId
+          in: query
+          schema:
+            type: integer
+        - name: staffId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Available slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimeSlot"
+
+  # ─── SERVICES ─────────────────────────────────────────────────────────────
+  /salons/{salonId}/services:
+    get:
+      operationId: getSalonServices
+      tags: [services]
+      summary: List services for a salon
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Services list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+    post:
+      operationId: createService
+      tags: [services]
+      summary: Add a service to salon (owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceInput"
+      responses:
+        "201":
+          description: Service created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+  /salons/{salonId}/services/{serviceId}:
+    patch:
+      operationId: updateService
+      tags: [services]
+      summary: Update a service
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceUpdate"
+      responses:
+        "200":
+          description: Service updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+
+    delete:
+      operationId: deleteService
+      tags: [services]
+      summary: Delete a service
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: serviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  # ─── STAFF ────────────────────────────────────────────────────────────────
+  /salons/{salonId}/staff:
+    get:
+      operationId: getSalonStaff
+      tags: [staff]
+      summary: List staff for a salon
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffMember"
+
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Add staff member to salon (owner)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInput"
+      responses:
+        "201":
+          description: Staff created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffMember"
+
+  # ─── BOOKINGS ─────────────────────────────────────────────────────────────
+  /bookings:
+    get:
+      operationId: getBookings
+      tags: [bookings]
+      summary: Get current user's bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, in_progress, completed, cancelled]
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [customer, owner]
+      responses:
+        "200":
+          description: Bookings list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+
+    post:
+      operationId: createBooking
+      tags: [bookings]
+      summary: Create a new booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}:
+    get:
+      operationId: getBooking
+      tags: [bookings]
+      summary: Get a booking by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /bookings/{id}/status:
+    patch:
+      operationId: updateBookingStatus
+      tags: [bookings]
+      summary: Update booking status (owner/user)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingStatusUpdate"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # ─── REVIEWS ──────────────────────────────────────────────────────────────
+  /salons/{salonId}/reviews:
+    get:
+      operationId: getSalonReviews
+      tags: [reviews]
+      summary: Get reviews for a salon
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Reviews list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewListResponse"
+
+    post:
+      operationId: createReview
+      tags: [reviews]
+      summary: Submit a review for a salon
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: salonId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewInput"
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +736,583 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    # ─── AUTH ─────────────────────────────────────────────────────────────
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, owner]
+          default: user
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    # ─── USER ─────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, name, email, role, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, owner, admin]
+        createdAt:
+          type: string
+          format: date-time
+
+    ProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+
+    # ─── CATEGORY ─────────────────────────────────────────────────────────
+    Category:
+      type: object
+      required: [id, name, icon]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        salonCount:
+          type: integer
+
+    # ─── SALON ────────────────────────────────────────────────────────────
+    Salon:
+      type: object
+      required: [id, name, ownerId, address, city, isActive, avgRating, totalReviews, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        ownerId:
+          type: integer
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        phone:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        avgRating:
+          type: number
+        totalReviews:
+          type: integer
+        isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        openTime:
+          type: ["string", "null"]
+        closeTime:
+          type: ["string", "null"]
+        distanceKm:
+          type: ["number", "null"]
+        isFavorited:
+          type: ["boolean", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    SalonDetail:
+      type: object
+      required: [id, name, ownerId, address, city, isActive, avgRating, totalReviews, services, staff, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        ownerId:
+          type: integer
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        phone:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        avgRating:
+          type: number
+        totalReviews:
+          type: integer
+        isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        openTime:
+          type: ["string", "null"]
+        closeTime:
+          type: ["string", "null"]
+        distanceKm:
+          type: ["number", "null"]
+        isFavorited:
+          type: ["boolean", "null"]
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        staff:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffMember"
+        recentReviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        createdAt:
+          type: string
+          format: date-time
+
+    SalonListResponse:
+      type: object
+      required: [salons, total, page, limit]
+      properties:
+        salons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Salon"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    FeaturedSalonsResponse:
+      type: object
+      required: [trending, topRated, nearby]
+      properties:
+        trending:
+          type: array
+          items:
+            $ref: "#/components/schemas/Salon"
+        topRated:
+          type: array
+          items:
+            $ref: "#/components/schemas/Salon"
+        nearby:
+          type: array
+          items:
+            $ref: "#/components/schemas/Salon"
+
+    SalonInput:
+      type: object
+      required: [name, address, city]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        phone:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        openTime:
+          type: ["string", "null"]
+        closeTime:
+          type: ["string", "null"]
+
+    SalonUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        address:
+          type: string
+        city:
+          type: string
+        state:
+          type: ["string", "null"]
+        lat:
+          type: ["number", "null"]
+        lng:
+          type: ["number", "null"]
+        phone:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        openTime:
+          type: ["string", "null"]
+        closeTime:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+
+    SalonStats:
+      type: object
+      required: [totalBookings, totalRevenue, activeCustomers, avgRating, totalReviews, thisMonthBookings, thisMonthRevenue, bookingsByStatus]
+      properties:
+        totalBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        activeCustomers:
+          type: integer
+        avgRating:
+          type: number
+        totalReviews:
+          type: integer
+        thisMonthBookings:
+          type: integer
+        thisMonthRevenue:
+          type: number
+        bookingsByStatus:
+          type: object
+          properties:
+            pending:
+              type: integer
+            accepted:
+              type: integer
+            in_progress:
+              type: integer
+            completed:
+              type: integer
+            cancelled:
+              type: integer
+
+    TimeSlot:
+      type: object
+      required: [time, available]
+      properties:
+        time:
+          type: string
+        available:
+          type: boolean
+        staffId:
+          type: ["integer", "null"]
+
+    # ─── SERVICE ──────────────────────────────────────────────────────────
+    Service:
+      type: object
+      required: [id, salonId, name, price, durationMinutes, isActive, createdAt]
+      properties:
+        id:
+          type: integer
+        salonId:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        category:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        discountPercent:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    ServiceInput:
+      type: object
+      required: [name, price, durationMinutes]
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        category:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        discountPercent:
+          type: ["number", "null"]
+
+    ServiceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        price:
+          type: number
+        durationMinutes:
+          type: integer
+        category:
+          type: ["string", "null"]
+        imageUrl:
+          type: ["string", "null"]
+        isActive:
+          type: boolean
+        discountPercent:
+          type: ["number", "null"]
+
+    # ─── STAFF ────────────────────────────────────────────────────────────
+    StaffMember:
+      type: object
+      required: [id, salonId, name, isAvailable, createdAt]
+      properties:
+        id:
+          type: integer
+        salonId:
+          type: integer
+        name:
+          type: string
+        role:
+          type: ["string", "null"]
+        specialization:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        isAvailable:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    StaffInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        role:
+          type: ["string", "null"]
+        specialization:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+
+    # ─── BOOKING ──────────────────────────────────────────────────────────
+    Booking:
+      type: object
+      required: [id, userId, salonId, serviceId, bookingDate, startTime, status, totalPrice, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        salonId:
+          type: integer
+        serviceId:
+          type: integer
+        staffId:
+          type: ["integer", "null"]
+        bookingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        endTime:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, accepted, in_progress, completed, cancelled]
+        totalPrice:
+          type: number
+        notes:
+          type: ["string", "null"]
+        salon:
+          $ref: "#/components/schemas/Salon"
+        service:
+          $ref: "#/components/schemas/Service"
+        staff:
+          $ref: "#/components/schemas/StaffMember"
+        user:
+          $ref: "#/components/schemas/User"
+        createdAt:
+          type: string
+          format: date-time
+
+    BookingInput:
+      type: object
+      required: [salonId, serviceId, bookingDate, startTime]
+      properties:
+        salonId:
+          type: integer
+        serviceId:
+          type: integer
+        staffId:
+          type: ["integer", "null"]
+        bookingDate:
+          type: string
+          format: date
+        startTime:
+          type: string
+        notes:
+          type: ["string", "null"]
+
+    BookingStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted, in_progress, completed, cancelled]
+
+    # ─── REVIEW ───────────────────────────────────────────────────────────
+    Review:
+      type: object
+      required: [id, userId, salonId, rating, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        salonId:
+          type: integer
+        bookingId:
+          type: ["integer", "null"]
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: ["string", "null"]
+        user:
+          $ref: "#/components/schemas/User"
+        createdAt:
+          type: string
+          format: date-time
+
+    ReviewInput:
+      type: object
+      required: [rating]
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: ["string", "null"]
+        bookingId:
+          type: ["integer", "null"]
+
+    ReviewListResponse:
+      type: object
+      required: [reviews, total, page, limit, avgRating]
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        avgRating:
+          type: number

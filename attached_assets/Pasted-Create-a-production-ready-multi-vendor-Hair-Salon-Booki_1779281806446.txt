@@ -1,0 +1,413 @@
+Create a production-ready multi-vendor Hair Salon Booking Startup App using Flutter for mobile frontend, Node.js + Express backend, PostgreSQL database, and Firebase Authentication. The app must work smoothly on Android, iOS, and Web using Flutter.
+
+Project Name: “GlowBook” (Salon Booking Platform)
+
+Main Goal:
+Build a startup-level salon marketplace app where:
+
+Salon owners can register and manage their salons/services
+Users can discover nearby salons using live location
+Users can book salon services
+Admin controls the entire platform
+App UI should be modern, simple, fast, responsive, and startup-ready
+
+Tech Stack:
+Frontend:
+
+Flutter
+Provider or Riverpod for state management
+GoRouter for navigation
+Dio for API calls
+Google Maps Flutter
+Geolocator package
+Firebase Auth
+Razorpay or Stripe payment integration
+Flutter Local Notifications
+Cached Network Image
+Image Picker
+Firebase Cloud Messaging for push notifications
+
+Backend:
+
+Node.js
+Express.js
+PostgreSQL
+Prisma ORM
+JWT Authentication
+Cloudinary for image uploads
+Socket.io for real-time booking updates
+
+Database:
+
+PostgreSQL
+
+Hosting:
+
+Replit for development
+Render/Railway for backend deployment
+Supabase/PostgreSQL hosting
+Firebase for notifications and auth
+APP ROLES
+USER APP FEATURES
+SALON OWNER FEATURES
+ADMIN PANEL FEATURES
+USER FEATURES
+
+Authentication:
+
+Login
+Signup
+Google Sign-In
+Forgot Password
+OTP verification
+Session management
+
+Home Screen:
+
+Nearby salons based on GPS location
+Trending salons
+Recommended salons
+Top rated salons
+Search bar with filters
+
+Search Filters:
+
+Distance
+Rating
+Price
+Gender specific salon
+Haircut type
+Open now
+AC/Non-AC
+Offers available
+
+Salon Details Page:
+
+Salon images
+Services list
+Price list
+Reviews and ratings
+Working hours
+Available slots
+Staff details
+Google Maps directions
+Call button
+WhatsApp chat button
+
+Booking System:
+
+Select service
+Select staff
+Select date/time
+Apply coupon
+Online payment
+Cash payment
+Booking confirmation
+Live booking status
+
+Booking Status:
+
+Pending
+Accepted
+In Progress
+Completed
+Cancelled
+
+User Profile:
+
+Edit profile
+Saved salons
+Booking history
+Favorite salons
+Wallet
+Notifications
+Address management
+
+Reviews:
+
+Give ratings
+Add text reviews
+Upload review images
+
+Notifications:
+
+Booking confirmed
+Reminder notifications
+Offer notifications
+Booking cancelled
+
+Extra User Features:
+
+Referral system
+Loyalty points
+Promo codes
+In-app chat with salon
+Dark mode
+Multi-language support
+AI recommended salons based on user history
+SALON OWNER FEATURES
+
+Salon Owner Authentication:
+
+Signup/Login
+Salon verification
+GST/license upload
+
+Salon Dashboard:
+
+Total bookings
+Total revenue
+Active customers
+Reviews analytics
+Monthly performance graph
+
+Salon Management:
+
+Add/Edit/Delete salon
+Activate/Deactivate salon
+Upload salon photos/videos
+Add salon timing
+Add multiple branches
+
+Service Management:
+
+Add/Edit/Delete services
+Set prices
+Set duration
+Set offers
+Enable/Disable services
+Add combo packages
+
+Booking Management:
+
+Accept/Reject booking
+Change booking status
+Reschedule bookings
+View upcoming bookings
+View completed bookings
+
+Staff Management:
+
+Add staff
+Staff schedules
+Staff availability
+Staff specialization
+
+Salon Availability:
+
+Open/Close salon
+Holiday settings
+Slot management
+
+Owner Wallet:
+
+Earnings
+Withdraw request
+Transaction history
+
+Marketing Tools:
+
+Push offers
+Discount campaigns
+Coupon generation
+ADMIN PANEL FEATURES
+
+Admin Login
+
+Dashboard:
+
+Total users
+Total salons
+Total bookings
+Total revenue
+Active salons
+Analytics charts
+
+User Management:
+
+View users
+Ban users
+Delete users
+
+Salon Management:
+
+Approve salons
+Reject salons
+Verify salons
+Suspend salons
+View all salon data
+
+Booking Management:
+
+View all bookings
+Booking analytics
+Refund handling
+
+Reports:
+
+Revenue reports
+Fraud reports
+Most booked salons
+Peak booking hours
+
+Content Management:
+
+Banner management
+Offer management
+Categories management
+
+Notification Management:
+
+Send push notifications
+Send promotional notifications
+
+Support System:
+
+Complaint management
+Help desk tickets
+UI/UX REQUIREMENTS
+
+Design Style:
+
+Minimal
+Premium startup look
+Smooth animations
+Fast loading
+Responsive UI
+
+Pages Needed:
+
+Splash Screen
+Onboarding Screens
+Login/Register
+Home
+Search
+Salon Details
+Booking
+Payment
+Profile
+Favorites
+Notifications
+Owner Dashboard
+Admin Dashboard
+
+Color Theme:
+
+White + Black + Gold
+Elegant salon aesthetic
+DATABASE TABLES
+
+Users
+Salons
+SalonBranches
+Services
+Staff
+Bookings
+Payments
+Reviews
+Favorites
+Notifications
+Coupons
+Wallets
+Transactions
+AdminLogs
+Offers
+
+API MODULES
+
+Auth APIs
+Salon APIs
+Booking APIs
+Payment APIs
+Review APIs
+Notification APIs
+Admin APIs
+Analytics APIs
+
+ADVANCED STARTUP FEATURES
+Real-time booking tracking
+Dynamic slot generation
+AI-based recommendations
+Subscription plans for salon owners
+Commission system for platform
+Wallet cashback
+Geo-fencing nearby salon detection
+Live chat support
+Multi-city scalability
+SEO support for web version
+QR code booking verification
+Invoice PDF generation
+Referral earning system
+REPLIT PROJECT STRUCTURE
+
+Frontend Flutter:
+lib/
+core/
+models/
+services/
+providers/
+screens/
+widgets/
+routes/
+utils/
+
+Backend:
+server/
+controllers/
+routes/
+middleware/
+services/
+prisma/
+uploads/
+sockets/
+
+SECURITY FEATURES
+JWT Authentication
+Encrypted passwords
+API rate limiting
+Role-based access
+Secure payment verification
+Input validation
+Firebase token validation
+PERFORMANCE FEATURES
+Lazy loading
+Pagination
+Image compression
+Cached APIs
+CDN image loading
+DELIVERABLES REQUIRED
+
+Generate complete:
+
+Flutter frontend code
+Backend APIs
+PostgreSQL schema
+Prisma models
+Authentication flow
+Booking logic
+Nearby salon location logic
+Admin panel
+Salon owner dashboard
+Payment integration
+Push notification setup
+Deployment steps
+Environment setup
+Replit configuration
+Clean folder structure
+Responsive UI
+Production-ready architecture
+
+Also:
+
+Use clean architecture
+Use reusable widgets/components
+Add comments in important code sections
+Generate sample dummy data
+Include API documentation
+Include setup instructions
+Include .env example
+Add proper error handling
+Add loading states and validations
+
+Final goal:
+Build a scalable startup-level salon booking marketplace app similar to UrbanClap/Booksy but focused on hair salons across all cities with admin control, salon owner management, location-based booking, and modern UI.
