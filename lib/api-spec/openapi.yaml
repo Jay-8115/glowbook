@@ -26,6 +26,8 @@ tags:
     description: Staff management
   - name: categories
     description: Service categories
+  - name: admin
+    description: Admin management (admin role required)
 paths:
   /healthz:
     get:
@@ -664,6 +666,222 @@ paths:
               schema:
                 $ref: "#/components/schemas/Booking"
 
+  # ─── ADMIN ────────────────────────────────────────────────────────────────
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Platform-wide stats (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/users:
+    get:
+      operationId: getAdminUsers
+      tags: [admin]
+      summary: List all users (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [user, owner, admin]
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserListResponse"
+
+  /admin/users/{id}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [admin]
+      summary: Update a user (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: adminDeleteUser
+      tags: [admin]
+      summary: Delete a user (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/salons:
+    get:
+      operationId: getAdminSalons
+      tags: [admin]
+      summary: List all salons (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          schema:
+            type: boolean
+        - name: isVerified
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Salons list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSalonListResponse"
+
+  /admin/salons/{id}:
+    patch:
+      operationId: adminUpdateSalon
+      tags: [admin]
+      summary: Update a salon (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSalonUpdate"
+      responses:
+        "200":
+          description: Salon updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Salon"
+    delete:
+      operationId: adminDeleteSalon
+      tags: [admin]
+      summary: Delete a salon (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Salon deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/bookings:
+    get:
+      operationId: getAdminBookings
+      tags: [admin]
+      summary: List all bookings (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, in_progress, completed, cancelled]
+        - name: salonId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bookings list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBookingListResponse"
+
   # ─── REVIEWS ──────────────────────────────────────────────────────────────
   /salons/{salonId}/reviews:
     get:
@@ -883,6 +1101,8 @@ components:
           type: ["string", "null"]
         closeTime:
           type: ["string", "null"]
+        totalSeats:
+          type: ["integer", "null"]
         distanceKm:
           type: ["number", "null"]
         isFavorited:
@@ -937,6 +1157,8 @@ components:
           type: ["number", "null"]
         isFavorited:
           type: ["boolean", "null"]
+        totalSeats:
+          type: ["integer", "null"]
         services:
           type: array
           items:
@@ -1015,6 +1237,8 @@ components:
           type: ["string", "null"]
         closeTime:
           type: ["string", "null"]
+        totalSeats:
+          type: ["integer", "null"]
 
     SalonUpdate:
       type: object
@@ -1045,7 +1269,11 @@ components:
           type: ["string", "null"]
         closeTime:
           type: ["string", "null"]
+        totalSeats:
+          type: ["integer", "null"]
         isActive:
+          type: boolean
+        isVerified:
           type: boolean
 
     SalonStats:
@@ -1299,6 +1527,98 @@ components:
           type: ["string", "null"]
         bookingId:
           type: ["integer", "null"]
+
+    # ─── ADMIN ────────────────────────────────────────────────────────────────
+    AdminStats:
+      type: object
+      required: [totalUsers, totalOwners, totalSalons, totalBookings, totalRevenue, activeBookings, pendingBookings]
+      properties:
+        totalUsers:
+          type: integer
+        totalOwners:
+          type: integer
+        totalSalons:
+          type: integer
+        activeSalons:
+          type: integer
+        totalBookings:
+          type: integer
+        totalRevenue:
+          type: number
+        activeBookings:
+          type: integer
+        pendingBookings:
+          type: integer
+
+    AdminUserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, owner, admin]
+
+    AdminSalonUpdate:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+        isVerified:
+          type: boolean
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+
+    AdminUserListResponse:
+      type: object
+      required: [users, total, page, limit]
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminSalonListResponse:
+      type: object
+      required: [salons, total, page, limit]
+      properties:
+        salons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Salon"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    AdminBookingListResponse:
+      type: object
+      required: [bookings, total, page, limit]
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
 
     ReviewListResponse:
       type: object

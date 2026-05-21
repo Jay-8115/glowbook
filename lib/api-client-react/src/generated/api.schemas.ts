@@ -111,6 +111,8 @@ export interface Salon {
   /** @nullable */
   closeTime?: string | null;
   /** @nullable */
+  totalSeats?: number | null;
+  /** @nullable */
   distanceKm?: number | null;
   /** @nullable */
   isFavorited?: boolean | null;
@@ -197,6 +199,8 @@ export interface SalonDetail {
   distanceKm?: number | null;
   /** @nullable */
   isFavorited?: boolean | null;
+  /** @nullable */
+  totalSeats?: number | null;
   services: Service[];
   staff: StaffMember[];
   recentReviews?: Review[];
@@ -237,6 +241,8 @@ export interface SalonInput {
   openTime?: string | null;
   /** @nullable */
   closeTime?: string | null;
+  /** @nullable */
+  totalSeats?: number | null;
 }
 
 export interface SalonUpdate {
@@ -260,7 +266,10 @@ export interface SalonUpdate {
   openTime?: string | null;
   /** @nullable */
   closeTime?: string | null;
+  /** @nullable */
+  totalSeats?: number | null;
   isActive?: boolean;
+  isVerified?: boolean;
 }
 
 export type SalonStatsBookingsByStatus = {
@@ -398,6 +407,63 @@ export interface ReviewInput {
   bookingId?: number | null;
 }
 
+export interface AdminStats {
+  totalUsers: number;
+  totalOwners: number;
+  totalSalons: number;
+  activeSalons?: number;
+  totalBookings: number;
+  totalRevenue: number;
+  activeBookings: number;
+  pendingBookings: number;
+}
+
+export type AdminUserUpdateRole = typeof AdminUserUpdateRole[keyof typeof AdminUserUpdateRole];
+
+
+export const AdminUserUpdateRole = {
+  user: 'user',
+  owner: 'owner',
+  admin: 'admin',
+} as const;
+
+export interface AdminUserUpdate {
+  name?: string;
+  email?: string;
+  /** @nullable */
+  phone?: string | null;
+  role?: AdminUserUpdateRole;
+}
+
+export interface AdminSalonUpdate {
+  isActive?: boolean;
+  isVerified?: boolean;
+  name?: string;
+  /** @nullable */
+  description?: string | null;
+}
+
+export interface AdminUserListResponse {
+  users: User[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AdminSalonListResponse {
+  salons: Salon[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AdminBookingListResponse {
+  bookings: Booking[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface ReviewListResponse {
   reviews: Review[];
   total: number;
@@ -458,6 +524,48 @@ export type GetBookingsRole = typeof GetBookingsRole[keyof typeof GetBookingsRol
 export const GetBookingsRole = {
   customer: 'customer',
   owner: 'owner',
+} as const;
+
+export type GetAdminUsersParams = {
+page?: number;
+limit?: number;
+search?: string;
+role?: GetAdminUsersRole;
+};
+
+export type GetAdminUsersRole = typeof GetAdminUsersRole[keyof typeof GetAdminUsersRole];
+
+
+export const GetAdminUsersRole = {
+  user: 'user',
+  owner: 'owner',
+  admin: 'admin',
+} as const;
+
+export type GetAdminSalonsParams = {
+page?: number;
+limit?: number;
+search?: string;
+isActive?: boolean;
+isVerified?: boolean;
+};
+
+export type GetAdminBookingsParams = {
+page?: number;
+limit?: number;
+status?: GetAdminBookingsStatus;
+salonId?: number;
+};
+
+export type GetAdminBookingsStatus = typeof GetAdminBookingsStatus[keyof typeof GetAdminBookingsStatus];
+
+
+export const GetAdminBookingsStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  in_progress: 'in_progress',
+  completed: 'completed',
+  cancelled: 'cancelled',
 } as const;
 
 export type GetSalonReviewsParams = {

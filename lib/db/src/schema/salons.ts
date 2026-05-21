@@ -23,6 +23,7 @@ export const salonsTable = pgTable("salons", {
   isVerified: boolean("is_verified").notNull().default(false),
   openTime: text("open_time"),
   closeTime: text("close_time"),
+  totalSeats: integer("total_seats"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

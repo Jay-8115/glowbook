@@ -25,6 +25,7 @@ function salonToApi(salon: typeof salonsTable.$inferSelect, extras: { isFavorite
     isVerified: salon.isVerified,
     openTime: salon.openTime,
     closeTime: salon.closeTime,
+    totalSeats: salon.totalSeats ?? null,
     distanceKm: extras.distanceKm ?? null,
     isFavorited: extras.isFavorited ?? null,
     createdAt: salon.createdAt,
@@ -96,9 +97,10 @@ router.post("/salons", requireAuth, async (req, res): Promise<void> => {
     res.status(400).json({ error: "name, address, and city are required" });
     return;
   }
+  const { totalSeats } = req.body;
   const [salon] = await db.insert(salonsTable).values({
     name, description, ownerId: req.user!.userId, address, city, state, lat, lng, phone,
-    imageUrl, images: images ?? [], openTime, closeTime,
+    imageUrl, images: images ?? [], openTime, closeTime, totalSeats: totalSeats ?? null,
   }).returning();
   res.status(201).json(salonToApi(salon));
 });
@@ -164,8 +166,8 @@ router.patch("/salons/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
-  const { name, description, address, city, state, lat, lng, phone, imageUrl, images, openTime, closeTime, isActive } = req.body;
-  const [salon] = await db.update(salonsTable).set({ name, description, address, city, state, lat, lng, phone, imageUrl, images, openTime, closeTime, isActive }).where(eq(salonsTable.id, id)).returning();
+  const { name, description, address, city, state, lat, lng, phone, imageUrl, images, openTime, closeTime, isActive, totalSeats } = req.body;
+  const [salon] = await db.update(salonsTable).set({ name, description, address, city, state, lat, lng, phone, imageUrl, images, openTime, closeTime, isActive, totalSeats: totalSeats ?? undefined }).where(eq(salonsTable.id, id)).returning();
   res.json(salonToApi(salon));
 });
 

@@ -27,4 +27,6 @@ export interface SalonInput {
   openTime?: string | null;
   /** @nullable */
   closeTime?: string | null;
+  /** @nullable */
+  totalSeats?: number | null;
 }

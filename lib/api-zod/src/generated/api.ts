@@ -113,6 +113,7 @@ export const GetFavoritesResponseItem = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -196,6 +197,7 @@ export const GetSalonsResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -221,7 +223,8 @@ export const CreateSalonBody = zod.object({
   "imageUrl": zod.string().nullish(),
   "images": zod.array(zod.string()).optional(),
   "openTime": zod.string().nullish(),
-  "closeTime": zod.string().nullish()
+  "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish()
 })
 
 
@@ -248,6 +251,7 @@ export const GetFeaturedSalonsResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -271,6 +275,7 @@ export const GetFeaturedSalonsResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -294,6 +299,7 @@ export const GetFeaturedSalonsResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -323,6 +329,7 @@ export const GetMySalonsResponseItem = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -362,6 +369,7 @@ export const GetSalonResponse = zod.object({
   "closeTime": zod.string().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
+  "totalSeats": zod.number().nullish(),
   "services": zod.array(zod.object({
   "id": zod.number(),
   "salonId": zod.number(),
@@ -427,7 +435,9 @@ export const UpdateSalonBody = zod.object({
   "images": zod.array(zod.string()).optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
-  "isActive": zod.boolean().optional()
+  "totalSeats": zod.number().nullish(),
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional()
 })
 
 export const UpdateSalonResponse = zod.object({
@@ -449,6 +459,7 @@ export const UpdateSalonResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -664,6 +675,7 @@ export const GetBookingsResponseItem = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -756,6 +768,7 @@ export const GetBookingResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -838,6 +851,7 @@ export const UpdateBookingStatusResponse = zod.object({
   "isVerified": zod.boolean().optional(),
   "openTime": zod.string().nullish(),
   "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
   "distanceKm": zod.number().nullish(),
   "isFavorited": zod.boolean().nullish(),
   "createdAt": zod.coerce.date()
@@ -875,6 +889,276 @@ export const UpdateBookingStatusResponse = zod.object({
   "createdAt": zod.coerce.date()
 }).optional(),
   "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Platform-wide stats (admin only)
+ */
+export const GetAdminStatsResponse = zod.object({
+  "totalUsers": zod.number(),
+  "totalOwners": zod.number(),
+  "totalSalons": zod.number(),
+  "activeSalons": zod.number().optional(),
+  "totalBookings": zod.number(),
+  "totalRevenue": zod.number(),
+  "activeBookings": zod.number(),
+  "pendingBookings": zod.number()
+})
+
+
+/**
+ * @summary List all users (admin only)
+ */
+export const getAdminUsersQueryPageDefault = 1;
+export const getAdminUsersQueryLimitDefault = 20;
+
+export const GetAdminUsersQueryParams = zod.object({
+  "page": zod.coerce.number().default(getAdminUsersQueryPageDefault),
+  "limit": zod.coerce.number().default(getAdminUsersQueryLimitDefault),
+  "search": zod.coerce.string().optional(),
+  "role": zod.enum(['user', 'owner', 'admin']).optional()
+})
+
+export const GetAdminUsersResponse = zod.object({
+  "users": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.enum(['user', 'owner', 'admin']),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+/**
+ * @summary Update a user (admin only)
+ */
+export const AdminUpdateUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateUserBody = zod.object({
+  "name": zod.string().optional(),
+  "email": zod.string().optional(),
+  "phone": zod.string().nullish(),
+  "role": zod.enum(['user', 'owner', 'admin']).optional()
+})
+
+export const AdminUpdateUserResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.enum(['user', 'owner', 'admin']),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a user (admin only)
+ */
+export const AdminDeleteUserParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteUserResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary List all salons (admin only)
+ */
+export const getAdminSalonsQueryPageDefault = 1;
+export const getAdminSalonsQueryLimitDefault = 20;
+
+export const GetAdminSalonsQueryParams = zod.object({
+  "page": zod.coerce.number().default(getAdminSalonsQueryPageDefault),
+  "limit": zod.coerce.number().default(getAdminSalonsQueryLimitDefault),
+  "search": zod.coerce.string().optional(),
+  "isActive": zod.coerce.boolean().optional(),
+  "isVerified": zod.coerce.boolean().optional()
+})
+
+export const GetAdminSalonsResponse = zod.object({
+  "salons": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ownerId": zod.number(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "state": zod.string().nullish(),
+  "lat": zod.number().nullish(),
+  "lng": zod.number().nullish(),
+  "phone": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "images": zod.array(zod.string()).optional(),
+  "avgRating": zod.number(),
+  "totalReviews": zod.number(),
+  "isActive": zod.boolean(),
+  "isVerified": zod.boolean().optional(),
+  "openTime": zod.string().nullish(),
+  "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
+  "distanceKm": zod.number().nullish(),
+  "isFavorited": zod.boolean().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
+})
+
+
+/**
+ * @summary Update a salon (admin only)
+ */
+export const AdminUpdateSalonParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminUpdateSalonBody = zod.object({
+  "isActive": zod.boolean().optional(),
+  "isVerified": zod.boolean().optional(),
+  "name": zod.string().optional(),
+  "description": zod.string().nullish()
+})
+
+export const AdminUpdateSalonResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ownerId": zod.number(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "state": zod.string().nullish(),
+  "lat": zod.number().nullish(),
+  "lng": zod.number().nullish(),
+  "phone": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "images": zod.array(zod.string()).optional(),
+  "avgRating": zod.number(),
+  "totalReviews": zod.number(),
+  "isActive": zod.boolean(),
+  "isVerified": zod.boolean().optional(),
+  "openTime": zod.string().nullish(),
+  "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
+  "distanceKm": zod.number().nullish(),
+  "isFavorited": zod.boolean().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a salon (admin only)
+ */
+export const AdminDeleteSalonParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const AdminDeleteSalonResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary List all bookings (admin only)
+ */
+export const getAdminBookingsQueryPageDefault = 1;
+export const getAdminBookingsQueryLimitDefault = 20;
+
+export const GetAdminBookingsQueryParams = zod.object({
+  "page": zod.coerce.number().default(getAdminBookingsQueryPageDefault),
+  "limit": zod.coerce.number().default(getAdminBookingsQueryLimitDefault),
+  "status": zod.enum(['pending', 'accepted', 'in_progress', 'completed', 'cancelled']).optional(),
+  "salonId": zod.coerce.number().optional()
+})
+
+export const GetAdminBookingsResponse = zod.object({
+  "bookings": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "salonId": zod.number(),
+  "serviceId": zod.number(),
+  "staffId": zod.number().nullish(),
+  "bookingDate": zod.coerce.date(),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullish(),
+  "status": zod.enum(['pending', 'accepted', 'in_progress', 'completed', 'cancelled']),
+  "totalPrice": zod.number(),
+  "notes": zod.string().nullish(),
+  "salon": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "ownerId": zod.number(),
+  "address": zod.string(),
+  "city": zod.string(),
+  "state": zod.string().nullish(),
+  "lat": zod.number().nullish(),
+  "lng": zod.number().nullish(),
+  "phone": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "images": zod.array(zod.string()).optional(),
+  "avgRating": zod.number(),
+  "totalReviews": zod.number(),
+  "isActive": zod.boolean(),
+  "isVerified": zod.boolean().optional(),
+  "openTime": zod.string().nullish(),
+  "closeTime": zod.string().nullish(),
+  "totalSeats": zod.number().nullish(),
+  "distanceKm": zod.number().nullish(),
+  "isFavorited": zod.boolean().nullish(),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "service": zod.object({
+  "id": zod.number(),
+  "salonId": zod.number(),
+  "name": zod.string(),
+  "description": zod.string().nullish(),
+  "price": zod.number(),
+  "durationMinutes": zod.number(),
+  "category": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "discountPercent": zod.number().nullish(),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "staff": zod.object({
+  "id": zod.number(),
+  "salonId": zod.number(),
+  "name": zod.string(),
+  "role": zod.string().nullish(),
+  "specialization": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "isAvailable": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "user": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "phone": zod.string().nullish(),
+  "avatarUrl": zod.string().nullish(),
+  "role": zod.enum(['user', 'owner', 'admin']),
+  "createdAt": zod.coerce.date()
+}).optional(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "limit": zod.number()
 })
 
 

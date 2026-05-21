@@ -40,6 +40,8 @@ export interface SalonDetail {
   distanceKm?: number | null;
   /** @nullable */
   isFavorited?: boolean | null;
+  /** @nullable */
+  totalSeats?: number | null;
   services: Service[];
   staff: StaffMember[];
   recentReviews?: Review[];

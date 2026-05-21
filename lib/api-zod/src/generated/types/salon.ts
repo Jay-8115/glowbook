@@ -34,6 +34,8 @@ export interface Salon {
   /** @nullable */
   closeTime?: string | null;
   /** @nullable */
+  totalSeats?: number | null;
+  /** @nullable */
   distanceKm?: number | null;
   /** @nullable */
   isFavorited?: boolean | null;

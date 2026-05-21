@@ -27,5 +27,8 @@ export interface SalonUpdate {
   openTime?: string | null;
   /** @nullable */
   closeTime?: string | null;
+  /** @nullable */
+  totalSeats?: number | null;
   isActive?: boolean;
+  isVerified?: boolean;
 }

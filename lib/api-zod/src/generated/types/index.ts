@@ -6,6 +6,13 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminBookingListResponse';
+export * from './adminSalonListResponse';
+export * from './adminSalonUpdate';
+export * from './adminStats';
+export * from './adminUserListResponse';
+export * from './adminUserUpdate';
+export * from './adminUserUpdateRole';
 export * from './authResponse';
 export * from './booking';
 export * from './bookingInput';
@@ -15,6 +22,11 @@ export * from './bookingStatusUpdateStatus';
 export * from './category';
 export * from './errorResponse';
 export * from './featuredSalonsResponse';
+export * from './getAdminBookingsParams';
+export * from './getAdminBookingsStatus';
+export * from './getAdminSalonsParams';
+export * from './getAdminUsersParams';
+export * from './getAdminUsersRole';
 export * from './getBookingsParams';
 export * from './getBookingsRole';
 export * from './getBookingsStatus';
