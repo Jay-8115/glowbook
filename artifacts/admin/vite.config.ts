@@ -4,6 +4,15 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
+// Load environment variables natively on Node.js 20+
+try {
+  process.loadEnvFile(path.resolve(import.meta.dirname, ".env"));
+} catch (e) {
+  try {
+    process.loadEnvFile(path.resolve(import.meta.dirname, "../../.env"));
+  } catch (_) {}
+}
+
 const rawPort = process.env.PORT;
 
 if (!rawPort) {

@@ -11,7 +11,7 @@ export default function BookingsPage() {
   
   const { data, isLoading } = useGetAdminBookings(
     { page, limit: 50 },
-    { query: { enabled: !!token } }
+    { query: { enabled: !!token } as any }
   );
 
   const getStatusBadge = (status: string) => {
@@ -57,12 +57,12 @@ export default function BookingsPage() {
                   <TableCell><Skeleton className="h-5 w-20" /></TableCell>
                 </TableRow>
               ))
-            ) : data?.bookings.length === 0 ? (
+            ) : data?.bookings?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No bookings found</TableCell>
               </TableRow>
             ) : (
-              data?.bookings.map((booking) => (
+              data?.bookings?.map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell className="font-mono text-xs">#{booking.id}</TableCell>
                   <TableCell>

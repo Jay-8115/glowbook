@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
   const { token } = useAuth();
-  const { data: stats, isLoading } = useGetAdminStats({ query: { enabled: !!token } });
+  const { data: stats, isLoading } = useGetAdminStats({ query: { enabled: !!token } as any });
 
   if (isLoading) {
     return (

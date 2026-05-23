@@ -20,21 +20,13 @@ export default function UsersPage() {
   
   const { data, isLoading } = useGetAdminUsers(
     { page, limit: 50, role: role !== "all" ? role as any : undefined },
-    { query: { enabled: !!token } }
+    { query: { enabled: !!token } as any }
   );
 
   const updateUser = useAdminUpdateUser();
   const deleteUser = useAdminDeleteUser();
 
-  const handleRoleChange = async (id: number, newRole: "user" | "owner" | "admin") => {
-    try {
-      await updateUser.mutateAsync({ id, data: { role: newRole } });
-      queryClient.invalidateQueries({ queryKey: getGetAdminUsersQueryKey() });
-      toast({ title: "Role updated successfully" });
-    } catch (err) {
-      toast({ variant: "destructive", title: "Failed to update role" });
-    }
-  };
+
 
   return (
     <div className="p-8 space-y-6">
@@ -82,12 +74,12 @@ export default function UsersPage() {
                   <TableCell><Skeleton className="h-5 w-16 ml-auto" /></TableCell>
                 </TableRow>
               ))
-            ) : data?.users.length === 0 ? (
+            ) : data?.users?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No users found</TableCell>
               </TableRow>
             ) : (
-              data?.users.map((user) => (
+              data?.users?.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
@@ -101,19 +93,6 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2 items-center">
-                      <Select 
-                        defaultValue={user.role} 
-                        onValueChange={(val) => handleRoleChange(user.id, val as any)}
-                      >
-                        <SelectTrigger className="w-[120px] h-8">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="owner">Owner</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <Button variant="destructive" size="sm" className="h-8" onClick={async () => {
                         if (confirm("Are you sure you want to delete this user?")) {
                           try {

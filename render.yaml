@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: glowbook-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: pnpm install --no-frozen-lockfile && pnpm run build
+    startCommand: pnpm --filter @workspace/api-server run start
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: glowbook-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+
+databases:
+  - name: glowbook-db
+    plan: free
+    region: oregon

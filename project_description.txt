@@ -1,0 +1,338 @@
+================================================================================
+                    GLOWBOOK - PROJECT DOCUMENTATION & ARCHITECTURE
+================================================================================
+
+GlowBook is a production-ready, multi-vendor hair salon booking marketplace.
+Customers can discover, search, and book services at various salons, while salon
+owners can manage their salons, services, staff availability, and appointments.
+
+This document provides a complete and detailed technical description of the
+GlowBook system, code structure, database models, API specs, application modules,
+and development guidelines.
+
+--------------------------------------------------------------------------------
+1. SYSTEM OVERVIEW & MONOREPO ARCHITECTURE
+--------------------------------------------------------------------------------
+GlowBook is structured as a pnpm monorepo workspace. It uses TypeScript across
+both frontend and backend services to ensure complete type safety from the
+database level to the mobile app screens.
+
+Workspace Layout:
+├── package.json               # Root monorepo configuration
+├── pnpm-workspace.yaml        # Workspace configuration listing package folders
+├── tsconfig.base.json         # Shared base TypeScript configuration
+├── tsconfig.json              # Root TypeScript config
+├── replit.md                  # Development startup guidelines and run commands
+├── scripts/                   # Workspace maintenance and seeding utility scripts
+│   └── src/
+│       ├── hello.ts           # Simple utility check
+│       └── seed.ts            # Extensive script to populate DB with demo entities
+├── lib/                       # SHARED LIBRARIES & CORE MODULES
+│   ├── db/                    # Drizzle ORM configuration & database schema
+│   ├── api-spec/              # OpenAPI contracts (openapi.yaml) and Orval config
+│   ├── api-zod/               # Auto-generated schemas for input validation
+│   └── api-client-react/      # Generated React Query hooks for client usage
+└── artifacts/                 # DEPLOYABLE WEB/MOBILE APPLICATIONS
+    ├── api-server/            # Express 5 REST API backend server
+    ├── mobile/                # Expo 54 / React Native cross-platform application
+    ├── admin/                 # Vite-based React Admin dashboard web application
+    └── mockup-sandbox/        # UI/UX mockup prototyping playground sandbox
+
+--------------------------------------------------------------------------------
+2. DATABASE MODEL & SCHEMAS (DRIZZLE ORM)
+--------------------------------------------------------------------------------
+The backend stores persistent data in a PostgreSQL database using Drizzle ORM.
+The source of truth for all database tables resides under:
+`lib/db/src/schema/`
+
+Below are the details of each schema table:
+
+A. USERS (`usersTable` in `users.ts`)
+   - `id`: `serial` primary key
+   - `name`: `text` (Not Null)
+   - `email`: `text` (Not Null, Unique)
+   - `passwordHash`: `text` (Not Null) - Encrypted using bcrypt
+   - `phone`: `text`
+   - `avatarUrl`: `text`
+   - `role`: `user_role` pgEnum: ["user", "owner", "admin"] (Default: "user")
+   - `createdAt`: `timestamp` with timezone (Default: Now)
+   - `updatedAt`: `timestamp` with timezone (Default: Now, auto-updates on row modifications)
+
+B. CATEGORIES (`categoriesTable` in `categories.ts`)
+   - `id`: `serial` primary key
+   - `name`: `text` (Not Null, Unique) - e.g., "Hair & Styling", "Nails", "Massage"
+   - `icon`: `text` (Not Null, Default: "scissors") - Lucide/Feather icon identifier
+   - `salonCount`: `integer` (Not Null, Default: 0)
+
+C. SALONS (`salonsTable` in `salons.ts`)
+   - `id`: `serial` primary key
+   - `name`: `text` (Not Null)
+   - `description`: `text`
+   - `ownerId`: `integer` (Not Null, References `users.id`)
+   - `address`: `text` (Not Null)
+   - `city`: `text` (Not Null)
+   - `state`: `text`
+   - `lat`: `real` - Latitude coordinates for distance calculations
+   - `lng`: `real` - Longitude coordinates for distance calculations
+   - `phone`: `text`
+   - `imageUrl`: `text` - Primary display photo
+   - `images`: `text` array (Default: empty array) - Image carousel gallery
+   - `avgRating`: `real` (Not Null, Default: 0) - Average review rating
+   - `totalReviews`: `integer` (Not Null, Default: 0)
+   - `totalBookings`: `integer` (Not Null, Default: 0)
+   - `isActive`: `boolean` (Not Null, Default: true)
+   - `isVerified`: `boolean` (Not Null, Default: false)
+   - `openTime`: `text` - Opening time, e.g. "09:00"
+   - `closeTime`: `text` - Closing time, e.g. "20:00"
+   - `totalSeats`: `integer`
+   - `createdAt`: `timestamp` (Default: Now)
+   - `updatedAt`: `timestamp` (Default: Now, auto-updates)
+
+D. SERVICES (`servicesTable` in `services.ts`)
+   - `id`: `serial` primary key
+   - `salonId`: `integer` (Not Null, References `salons.id` with cascade deletion)
+   - `name`: `text` (Not Null)
+   - `description`: `text`
+   - `price`: `real` (Not Null) - Base service cost
+   - `durationMinutes`: `integer` (Not Null, Default: 60)
+   - `category`: `text` - Classification tag
+   - `imageUrl`: `text`
+   - `isActive`: `boolean` (Not Null, Default: true)
+   - `discountPercent`: `real` - Optional discount
+   - `createdAt`: `timestamp` (Default: Now)
+   - `updatedAt`: `timestamp` (Default: Now, auto-updates)
+
+E. STAFF MEMBERS (`staffTable` in `staff.ts`)
+   - `id`: `serial` primary key
+   - `salonId`: `integer` (Not Null, References `salons.id` with cascade deletion)
+   - `name`: `text` (Not Null) - Stylist/staff name
+   - `role`: `text` - Stylist role, e.g., "Senior Stylist", "Color Specialist"
+   - `specialization`: `text`
+   - `avatarUrl`: `text`
+   - `isAvailable`: `boolean` (Not Null, Default: true)
+   - `createdAt`: `timestamp` (Default: Now)
+   - `updatedAt`: `timestamp` (Default: Now, auto-updates)
+
+F. BOOKINGS (`bookingsTable` in `bookings.ts`)
+   - `id`: `serial` primary key
+   - `userId`: `integer` (Not Null, References `users.id`)
+   - `salonId`: `integer` (Not Null, References `salons.id`)
+   - `serviceId`: `integer` (Not Null, References `services.id`)
+   - `staffId`: `integer` (References `staff.id`) - Selected stylist
+   - `bookingDate`: `date` (Not Null)
+   - `startTime`: `text` (Not Null) - Start time slot
+   - `endTime`: `text` - Calculated end time
+   - `status`: `booking_status` pgEnum: ["pending", "accepted", "in_progress", "completed", "cancelled"] (Default: "pending")
+   - `totalPrice`: `real` (Not Null) - Final price paid (considering discounts)
+   - `notes`: `text` - Special requests or instructions
+   - `createdAt`: `timestamp` (Default: Now)
+   - `updatedAt`: `timestamp` (Default: Now, auto-updates)
+
+G. REVIEWS & RATINGS (`reviewsTable` in `reviews.ts`)
+   - `id`: `serial` primary key
+   - `userId`: `integer` (Not Null, References `users.id`)
+   - `salonId`: `integer` (Not Null, References `salons.id` with cascade deletion)
+   - `bookingId`: `integer` (References `bookings.id`) - Associated appointment
+   - `rating`: `integer` (Not Null) - 1 to 5 stars
+   - `comment`: `text`
+   - `createdAt`: `timestamp` (Default: Now)
+   - `updatedAt`: `timestamp` (Default: Now, auto-updates)
+
+H. FAVORITES (`favoritesTable` in `favorites.ts`)
+   - `userId`: `integer` (Not Null, References `users.id` with cascade deletion)
+   - `salonId`: `integer` (Not Null, References `salons.id` with cascade deletion)
+   - `createdAt`: `timestamp` (Default: Now)
+   - Composite Primary Key: `[userId, salonId]`
+
+--------------------------------------------------------------------------------
+3. CONTRACT-FIRST API ARCHITECTURE & ENDPOINTS
+--------------------------------------------------------------------------------
+GlowBook operates on a strict "contract-first" API philosophy. 
+The OpenAPI specification defined in `lib/api-spec/openapi.yaml` acts as the single
+source of truth for the entire API surface. 
+
+Code Generation Flow:
+- When changes are made to `openapi.yaml`, developer runs:
+  `pnpm --filter @workspace/api-spec run codegen`
+- This uses Orval (`lib/api-spec/orval.config.ts`) to auto-generate:
+  1. Zod validation schemas (`lib/api-zod/`)
+  2. Strongly typed React Query hooks (`lib/api-client-react/src/generated/`)
+- Frontends consume only these auto-generated hooks instead of raw fetch calls.
+
+Core API Endpoints implemented in Express:
+- HEALTH:
+  - GET `/api/healthz` — Server health status check.
+- AUTHENTICATION:
+  - POST `/api/auth/register` — Register a customer or owner account.
+  - POST `/api/auth/login` — Sign in and get a JWT token.
+  - GET `/api/auth/me` — Retrieve the current user's profile details.
+- USER PROFILE & FAVORITES:
+  - PATCH `/api/users/profile` — Update name, phone, or avatar.
+  - GET `/api/users/favorites` — List the user's bookmarked salons.
+  - POST `/api/users/favorites/{salonId}` — Save a salon.
+  - DELETE `/api/users/favorites/{salonId}` — Unsave a salon.
+- CATEGORIES:
+  - GET `/api/categories` — Get list of service categories and salon counts.
+- SALON LISTING & DETAILS:
+  - GET `/api/salons` — List and filter salons (by search text, categories, minimum ratings, radius, geolocation coordinates, and pagination).
+  - POST `/api/salons` — Register a new salon profile (owner permission required).
+  - GET `/api/salons/featured` — Get top-rated and trending salons.
+  - GET `/api/salons/my` — Get all salons owned by the currently authenticated user.
+  - GET `/api/salons/{id}` — Get full salon details, including categories, reviews, services, and staff list.
+  - PATCH `/api/salons/{id}` — Edit salon details (owner of the salon only).
+  - GET `/api/salons/{id}/stats` — Get financial and booking dashboard analytics for the salon.
+  - GET `/api/salons/{id}/availability` — Calculate and return open time slots on a given date for a service and stylist.
+- SERVICES:
+  - GET `/api/salons/{salonId}/services` — Get all services at a salon.
+  - POST `/api/salons/{salonId}/services` — Add a service.
+  - PATCH `/api/salons/{salonId}/services/{serviceId}` — Edit a service.
+  - DELETE `/api/salons/{salonId}/services/{serviceId}` — Remove a service.
+- STAFF:
+  - GET `/api/salons/{salonId}/staff` — Get all stylists at a salon.
+  - POST `/api/salons/{salonId}/staff` — Add a staff member.
+- BOOKINGS & APPOINTMENTS:
+  - GET `/api/bookings` — Fetch current user's bookings (filter by status or role [customer/owner]).
+  - POST `/api/bookings` — Create a new appointment booking.
+  - GET `/api/bookings/{id}` — Get booking details by ID.
+  - PATCH `/api/bookings/{id}/status` — Owner updates appointment status ("accepted", "in_progress", "completed", "cancelled") or Customer cancels ("cancelled").
+- PLATFORM ADMINISTRATION:
+  - GET `/api/admin/stats` — Global platform statistics.
+  - GET `/api/admin/users` — List and search registered users.
+  - PATCH `/api/admin/users/{id}` — Modify roles or details of any user.
+  - DELETE `/api/admin/users/{id}` — Remove a user from the platform.
+  - GET `/api/admin/salons` — List all registered salons for platform curation.
+
+--------------------------------------------------------------------------------
+4. CROSS-PLATFORM MOBILE APPLICATION (EXPO)
+--------------------------------------------------------------------------------
+The mobile application is built using Expo 54 and React Native. It uses Expo Router
+for file-system-based routing. The app is accessible via both mobile devices
+(iOS, Android) and web browsers.
+
+A. Application Screen Structure (`artifacts/mobile/app/`):
+   - `_layout.tsx`: Root application setup. Initializes context providers (AuthContext), font loading (Google Font Inter), QueryClient for React Query, and holds navigation wrappers.
+   - `(tabs)/`: Tab-based navigation for customers.
+     - `index.tsx` (Home): Features category sliders, trending/featured salons, search bar, and personalized greeting.
+     - `search.tsx`: Dedicated discovery screen with category chips, filtering controls, and map/list view toggle.
+     - `bookings.tsx`: Categorized list of past, upcoming, and active customer appointments.
+     - `favorites.tsx`: Displays list of user's saved/starred salons.
+     - `profile.tsx`: Customer information, option to switch to "Owner Portal", or sign out.
+   - `salon/[id].tsx`: Detail screen for a salon. Features a large header hero photo, quick metrics (reviews, verified badge), tabbed menu of services grouped by category, interactive staff selectors, and review reviews feed.
+   - `booking/`:
+     - `new.tsx`: Guided booking wizard flow. Customers select a service, select a stylist (or choose "Any Stylist"), pick an available date and time slot from the calculated list, write special requests/notes, and confirm the reservation.
+     - `[id].tsx`: Real-time invoice and status tracking sheet for a booking. Shows appointment details, stylist card, price breakdown, and cancellation actions.
+   - `auth/`:
+     - `login.tsx` & `register.tsx`: Full auth screen layout for logging in or signing up. Allows selection of registering as either a customer or salon owner.
+   - `owner/` (Owner Portal):
+     - `dashboard.tsx`: Main overview panel showing business metrics (monthly revenue, completion rates, seating loads), and chronological booking management lists. Allows salon owners to accept, decline, start, or mark bookings as completed.
+     - `salon-form.tsx`: Edit form for the owner to customize their salon information, descriptions, opening hours, address, and pictures.
+     - `services.tsx`: Panel to add, edit, or delete the services offered, pricing, and duration.
+     - `staff.tsx`: Roster management screen for adding stylists, managing their profile roles, specializations, and booking availability.
+
+B. Key Utilities & Design Tokens:
+   - State & Session Management (`context/AuthContext.tsx`): Manages authentication states, JWT token storing, and persistence using AsyncStorage. It handles logins, signouts, and determines whether the active portal should load customer tabs or owner screens.
+   - Colors & Design Guidelines (`constants/colors.ts`): Elegant, high-end styling palette:
+     - Gold theme (Primary: `#C9A84C`)
+     - Rich dark backgrounds (Base: `#0A0A0A`, Card containers: `#1A1A1A`, Borders: `#2D2D2D`)
+     - High contrast text (Primary: `#FFFFFF`, Muted: `#999999`)
+     - Accent colors (Success: `#10B981`, Error/Cancellation: `#EF4444`)
+
+--------------------------------------------------------------------------------
+5. WEB ADMIN DASHBOARD
+--------------------------------------------------------------------------------
+Located in `artifacts/admin/`, the web dashboard is a clean React panel using
+Vite for builds, styled using CSS and custom UI items.
+
+Pages (`artifacts/admin/src/pages/`):
+- `login.tsx`: Validates admin roles and authenticates.
+- `dashboard.tsx`: Displays system-wide counts (Total users, registered salons, complete bookings, total marketplace transactions).
+- `users.tsx`: Roster of all users, allowing admins to search users, edit their profile roles (admin/owner/customer), or delete accounts.
+- `salons.tsx`: Curated list of all salons to toggle active status, review owner details, or set verification status badges.
+- `bookings.tsx`: View all platform bookings and audit transaction details.
+
+--------------------------------------------------------------------------------
+6. SEED DATA & USER DEMOS
+--------------------------------------------------------------------------------
+The database comes seeded with high-quality demonstration entities to immediately
+test booking, customer, and owner portals.
+
+Seeded Categories:
+1. Hair & Styling (icon: scissors)
+2. Nails (icon: sparkles)
+3. Makeup (icon: star)
+4. Massage (icon: heart)
+5. Skincare (icon: sun)
+6. Barber (icon: user)
+
+Seeded Salons:
+1. Golden Scissors (New York, NY - Rating: 4.8) - Hair specialty
+2. Velvet Touch Spa (Los Angeles, CA - Rating: 4.6) - Spa, massage, facial
+3. The Style Lab (Chicago, IL - Rating: 4.5) - Trendy hair coloring
+4. Luxe Nail Bar (Miami, FL - Rating: 4.9) - Manicures, acrylics, nail art
+5. Prestige Barber Co. (Houston, TX - Rating: 4.7) - Hot towel shaves & cuts
+6. Glow Beauty Studio (Seattle, WA - Rating: 4.4) - Makeup & Skincare
+
+Demo Credentials:
+- Customers Portal Access:
+  - Email: `jane@glowbook.com`
+  - Password: `password123`
+- Salon Owners Portal Access:
+  - Email: `owner@glowbook.com`
+  - Password: `password123`
+
+--------------------------------------------------------------------------------
+7. COMMAND REFERENCE
+--------------------------------------------------------------------------------
+Commands are managed from the root workspace using pnpm:
+
+- RUN BACKEND SERVER:
+  `pnpm --filter @workspace/api-server run dev`
+  (Runs Express API on http://localhost:8080)
+
+- RUN EXPO MOBILE APP:
+  `pnpm --filter @workspace/mobile run dev`
+  (Starts Metro Bundler. Allows loading the Expo client on physical devices or web)
+
+- RUN DATABASE MIGRATION/PUSH:
+  `pnpm --filter @workspace/db run push`
+  (Pushes Drizzle schemas changes directly to your active Postgres database instance)
+
+- GENERATE API SPEC CODEGEN:
+  `pnpm --filter @workspace/api-spec run codegen`
+  (Reads openapi.yaml, generates Zod schemas and React Query hooks)
+
+- TYPECHECK WORKSPACE:
+  `pnpm run typecheck`
+  (Runs full TypeScript diagnostic checks across all packages)
+
+- BUILD PRODUCTION BUNDLES:
+  `pnpm run build`
+  (Compiles and outputs production-optimized JS bundles)
+
+--------------------------------------------------------------------------------
+8. DEVELOPER GOTCHAS & GUIDELINES
+================================================================================
+When adding features or making modifications to GlowBook, take note of the
+following constraints that ensure platform stability:
+
+- EXPO ROUTER <LINK> WARNING (WEB CRASH PREVENTION):
+  Do not use the native `<Link>` component from `expo-router` in reusable items.
+  On React Native Web, `<Link>` compiles to a traditional HTML `<a>` tag.
+  Passing custom Styles to it triggers an indexed CSS property crash on browsers.
+  Instead, always implement navigation programmatically using:
+  `const router = useRouter(); router.push("/path")`
+
+- PLATFORM-SAFE ANIMATIONS:
+  When using React Native `Animated.timing` animations, `useNativeDriver: true`
+  will crash web runtimes. Always protect animation config parameters using:
+  `useNativeDriver: Platform.OS !== 'web'`
+
+- KEYBOARD PROVIDER WORKAROUND:
+  `KeyboardProvider` from `react-native-keyboard-controller` crashes web setups.
+  Keep it out of the root `app/_layout.tsx` file. Natively, utilize
+  `KeyboardAwareScrollViewCompat` on forms without injecting a global provider.
+
+- HOVER EFFECTS ON TABS:
+  Expo Router tab items render as HTML links internally on web. Ensure styling passed
+  to tabs does not cause structural breakdown or container padding overflows on web.
+================================================================================

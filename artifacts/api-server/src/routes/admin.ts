@@ -1,5 +1,5 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { db, usersTable, salonsTable, bookingsTable, servicesTable } from "@workspace/db";
+import { db, usersTable, salonsTable, bookingsTable, servicesTable, adminLogsTable, adminsTable } from "@workspace/db";
 import { eq, like, and, sql, desc } from "drizzle-orm";
 import { requireAuth } from "../middlewares/auth";
 
@@ -11,6 +11,27 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
     return;
   }
   next();
+}
+
+async function logAdminAction(userId: number, action: string, target?: string, details?: string) {
+  try {
+    const [user] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
+    if (!user) return;
+
+    const [admin] = await db.select().from(adminsTable).where(eq(adminsTable.email, user.email)).limit(1);
+    if (admin) {
+      await db.insert(adminLogsTable).values({
+        adminId: admin.id,
+        action,
+        target: target ?? null,
+        details: details ?? null,
+      });
+    } else {
+      console.warn(`Admin with email ${user.email} not found in admins table.`);
+    }
+  } catch (e) {
+    console.error("Failed to log admin action:", e);
+  }
 }
 
 // GET /api/admin/stats
@@ -77,6 +98,15 @@ router.patch("/admin/users/:id", requireAuth, requireAdmin, async (req, res): Pr
     .where(eq(usersTable.id, id))
     .returning({ id: usersTable.id, name: usersTable.name, email: usersTable.email, phone: usersTable.phone, avatarUrl: usersTable.avatarUrl, role: usersTable.role, createdAt: usersTable.createdAt });
   if (!user) { res.status(404).json({ error: "User not found" }); return; }
+  
+  // Log the action
+  await logAdminAction(
+    req.user!.userId,
+    "UPDATE_USER",
+    `User #${id}`,
+    `Updated details/role of user ${user.name} (${user.email}) to role: ${role || user.role}`
+  );
+  
   res.json(user);
 });
 
@@ -84,6 +114,15 @@ router.patch("/admin/users/:id", requireAuth, requireAdmin, async (req, res): Pr
 router.delete("/admin/users/:id", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id), 10);
   await db.delete(usersTable).where(eq(usersTable.id, id));
+  
+  // Log the action
+  await logAdminAction(
+    req.user!.userId,
+    "DELETE_USER",
+    `User #${id}`,
+    `Deleted user account #${id}`
+  );
+  
   res.json({ success: true, message: "User deleted" });
 });
 
@@ -126,6 +165,15 @@ router.patch("/admin/salons/:id", requireAuth, requireAdmin, async (req, res): P
     .where(eq(salonsTable.id, id))
     .returning();
   if (!salon) { res.status(404).json({ error: "Salon not found" }); return; }
+  
+  // Log the action
+  await logAdminAction(
+    req.user!.userId,
+    "UPDATE_SALON",
+    `Salon #${id}`,
+    `Updated salon details: ${salon.name}. Verified: ${salon.isVerified}, Active: ${salon.isActive}`
+  );
+  
   res.json(salon);
 });
 
@@ -133,6 +181,15 @@ router.patch("/admin/salons/:id", requireAuth, requireAdmin, async (req, res): P
 router.delete("/admin/salons/:id", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   const id = parseInt(String(req.params.id), 10);
   await db.delete(salonsTable).where(eq(salonsTable.id, id));
+  
+  // Log the action
+  await logAdminAction(
+    req.user!.userId,
+    "DELETE_SALON",
+    `Salon #${id}`,
+    `Deleted salon listing #${id}`
+  );
+  
   res.json({ success: true, message: "Salon deleted" });
 });
 
@@ -166,6 +223,31 @@ router.get("/admin/bookings", requireAuth, requireAdmin, async (req, res): Promi
   }));
 
   res.json({ bookings: enriched, total: countRow[0]?.count ?? 0, page: pageNum, limit: limitNum });
+});
+
+// GET /api/admin/logs
+router.get("/admin/logs", requireAuth, requireAdmin, async (_req, res): Promise<void> => {
+  try {
+    const logs = await db
+      .select({
+        id: adminLogsTable.id,
+        adminId: adminLogsTable.adminId,
+        adminName: adminsTable.name,
+        adminEmail: adminsTable.email,
+        action: adminLogsTable.action,
+        target: adminLogsTable.target,
+        details: adminLogsTable.details,
+        createdAt: adminLogsTable.createdAt,
+      })
+      .from(adminLogsTable)
+      .innerJoin(adminsTable, eq(adminLogsTable.adminId, adminsTable.id))
+      .orderBy(desc(adminLogsTable.createdAt))
+      .limit(100);
+
+    res.json({ logs });
+  } catch (e) {
+    res.status(500).json({ error: "Failed to fetch logs" });
+  }
 });
 
 export default router;

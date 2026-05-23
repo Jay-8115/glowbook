@@ -1,6 +1,6 @@
 import { db } from "@workspace/db";
 import {
-  usersTable, categoriesTable, salonsTable, servicesTable, staffTable,
+  usersTable, categoriesTable, salonsTable, servicesTable, staffTable, adminsTable,
 } from "@workspace/db";
 import bcrypt from "bcrypt";
 
@@ -36,7 +36,23 @@ async function seed() {
     role: "user",
   }).onConflictDoNothing().returning();
 
-  console.log("✔ Demo users seeded (owner@glowbook.com / password123)");
+  // Demo administrator accounts in both users and admins tables
+  await db.insert(usersTable).values({
+    name: "GlowBook Administrator",
+    email: "admin@glowbook.com",
+    passwordHash: hash,
+    phone: "+1 555-0900",
+    role: "admin",
+  }).onConflictDoNothing();
+
+  await db.insert(adminsTable).values({
+    name: "GlowBook Administrator",
+    email: "admin@glowbook.com",
+    passwordHash: hash,
+    phone: "+1 555-0900",
+  }).onConflictDoNothing();
+
+  console.log("✔ Demo users seeded (owner@glowbook.com / admin@glowbook.com / password123)");
 
   if (!owner) { console.log("Users already seeded, skipping salons"); return; }
 

@@ -6,3 +6,5 @@ export * from "./staff";
 export * from "./bookings";
 export * from "./reviews";
 export * from "./favorites";
+export * from "./admin_logs";
+export * from "./admins";

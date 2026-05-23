@@ -16,7 +16,7 @@ export default function SalonsPage() {
   const [page] = useState(1);
   const { data, isLoading } = useGetAdminSalons(
     { page, limit: 50 },
-    { query: { enabled: !!token } }
+    { query: { enabled: !!token } as any }
   );
 
   const updateSalon = useAdminUpdateSalon();
@@ -72,12 +72,12 @@ export default function SalonsPage() {
                   <TableCell><Skeleton className="h-5 w-16" /></TableCell>
                 </TableRow>
               ))
-            ) : data?.salons.length === 0 ? (
+            ) : data?.salons?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No salons found</TableCell>
               </TableRow>
             ) : (
-              data?.salons.map((salon) => (
+              data?.salons?.map((salon) => (
                 <TableRow key={salon.id}>
                   <TableCell>
                     <div className="font-medium">{salon.name}</div>
