@@ -25,9 +25,15 @@ app.use(
     },
   }),
 );
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Root Route
+app.get("/", (req, res) => {
+  res.send("GlowBook Backend Running Successfully");
+});
 
 app.use("/api", router);
 
