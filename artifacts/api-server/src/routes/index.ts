@@ -12,6 +12,15 @@ import adminRouter from "./admin";
 
 const router: IRouter = Router();
 
+// Test Route
+router.get("/", (req, res) => {
+    res.json({
+        success: true,
+        message: "GlowBook API Running Successfully",
+    });
+});
+
+// Routes
 router.use(healthRouter);
 router.use(authRouter);
 router.use(usersRouter);
