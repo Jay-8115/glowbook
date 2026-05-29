@@ -10,7 +10,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const sslConfig = process.env.DATABASE_URL && (process.env.DATABASE_URL.includes("supabase.co") || process.env.NODE_ENV === "production")
+const sslConfig = process.env.DATABASE_URL && (
+  process.env.DATABASE_URL.includes("supabase.co") || 
+  process.env.DATABASE_URL.includes("supabase.com") || 
+  process.env.DATABASE_URL.includes("pooler.supabase.com") || 
+  process.env.NODE_ENV === "production"
+)
   ? { rejectUnauthorized: false }
   : false;
 

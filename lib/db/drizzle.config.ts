@@ -10,6 +10,10 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL!,
-    ssl: process.env.DATABASE_URL.includes("supabase.co") ? { rejectUnauthorized: false } : undefined,
+    ssl: (process.env.DATABASE_URL.includes("supabase.co") || 
+          process.env.DATABASE_URL.includes("supabase.com") || 
+          process.env.DATABASE_URL.includes("pooler.supabase.com")) 
+      ? { rejectUnauthorized: false } 
+      : undefined,
   },
 });
