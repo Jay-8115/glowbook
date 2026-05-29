@@ -17,6 +17,17 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _appType: string | null = null;
+
+/**
+ * Set an app type/platform descriptor that is automatically attached
+ * to every outgoing request in the `x-app-type` header.
+ * Pass `null` to clear.
+ */
+export function setAppType(type: string | null): void {
+  _appType = type;
+}
+
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -357,6 +368,12 @@ export async function customFetch<T = unknown>(
       headers.set("authorization", `Bearer ${token}`);
     }
   }
+
+  // Attach app type identifier when configured
+  if (_appType && !headers.has("x-app-type")) {
+    headers.set("x-app-type", _appType);
+  }
+
 
   const requestInfo = { method, url: resolveUrl(input) };
 

@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'package:http/http.dart' as _http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/models.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.31.27:8000/api';
+  static const String baseUrl = 'https://glowbook-luq7.onrender.com/api';
   
   static String? _token;
 
@@ -475,5 +476,35 @@ class ApiService {
       final err = jsonDecode(response.body);
       throw Exception(err['error'] ?? 'Failed to add staff member');
     }
+  }
+}
+
+class http {
+  static Future<_http.Response> _wrap(Future<_http.Response> Function() req) async {
+    try {
+      return await req().timeout(const Duration(seconds: 90));
+    } on TimeoutException {
+      throw Exception('Connection timed out. The server is spinning up. Please try again in a few seconds.');
+    }
+  }
+
+  static Future<_http.Response> get(Uri url, {Map<String, String>? headers}) {
+    return _wrap(() => _http.get(url, headers: headers));
+  }
+
+  static Future<_http.Response> post(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) {
+    return _wrap(() => _http.post(url, headers: headers, body: body, encoding: encoding));
+  }
+
+  static Future<_http.Response> patch(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) {
+    return _wrap(() => _http.patch(url, headers: headers, body: body, encoding: encoding));
+  }
+
+  static Future<_http.Response> delete(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) {
+    return _wrap(() => _http.delete(url, headers: headers, body: body, encoding: encoding));
+  }
+
+  static Future<_http.Response> put(Uri url, {Map<String, String>? headers, Object? body, Encoding? encoding}) {
+    return _wrap(() => _http.put(url, headers: headers, body: body, encoding: encoding));
   }
 }

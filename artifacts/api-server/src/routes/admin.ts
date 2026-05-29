@@ -13,12 +13,10 @@ function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
-async function logAdminAction(userId: number, action: string, target?: string, details?: string) {
+async function logAdminAction(adminId: number, action: string, target?: string, details?: string) {
   try {
-    const [user] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-    if (!user) return;
-
-    const [admin] = await db.select().from(adminsTable).where(eq(adminsTable.email, user.email)).limit(1);
+    // 1. Prioritize looking up directly in adminsTable using the adminId
+    const [admin] = await db.select().from(adminsTable).where(eq(adminsTable.id, adminId)).limit(1);
     if (admin) {
       await db.insert(adminLogsTable).values({
         adminId: admin.id,
@@ -26,13 +24,29 @@ async function logAdminAction(userId: number, action: string, target?: string, d
         target: target ?? null,
         details: details ?? null,
       });
-    } else {
-      console.warn(`Admin with email ${user.email} not found in admins table.`);
+      return;
+    }
+
+    // 2. Fallback: if it's a legacy admin whose userId matches the usersTable, resolve by matching email
+    const [user] = await db.select({ email: usersTable.email }).from(usersTable).where(eq(usersTable.id, adminId)).limit(1);
+    if (user) {
+      const [fallbackAdmin] = await db.select().from(adminsTable).where(eq(adminsTable.email, user.email)).limit(1);
+      if (fallbackAdmin) {
+        await db.insert(adminLogsTable).values({
+          adminId: fallbackAdmin.id,
+          action,
+          target: target ?? null,
+          details: details ?? null,
+        });
+      } else {
+        console.warn(`Admin with email ${user.email} not found in admins table.`);
+      }
     }
   } catch (e) {
     console.error("Failed to log admin action:", e);
   }
 }
+
 
 // GET /api/admin/stats
 router.get("/admin/stats", requireAuth, requireAdmin, async (_req, res): Promise<void> => {

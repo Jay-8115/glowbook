@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
-import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
+import { setBaseUrl, setAuthTokenGetter, setAppType } from "@workspace/api-client-react";
 
 interface AuthContextType {
   token: string | null;
@@ -28,8 +28,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    setBaseUrl("http://localhost:8000");
+    setBaseUrl("https://glowbook-luq7.onrender.com");
     setAuthTokenGetter(() => sessionStorage.getItem("admin_token"));
+    setAppType("admin");
 
     // Check on initial load if session already expired
     const savedLastActivity = sessionStorage.getItem("admin_last_activity");
